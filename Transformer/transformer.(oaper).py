@@ -43,4 +43,16 @@ class PositionEncoding(nn.Module):
         return self.dropout(x)
 
 
+class NormalizationLayer(nn.Module):
+
+    def __init__(self, features:int, eps:float=10**-6)->None:
+        super().__init__()
+        self.eps = eps 
+        self.alpha = nn.Parameter(torch.ones(features)) # untuk scaling hasil normaslisasi
+        self.bias = nn.Parameter(torch.zeros(features)) # untuk shift hasil normalisasi
+
+    def forward(self, x):
+        mean= x.mean(dim = -1, keepdim = True)
+        std = x.std(dim = -1, keepdim = True)
+        return self.alpha * (x - mean) /( std + self.eps) + self.bias
   
