@@ -56,3 +56,34 @@ class NormalizationLayer(nn.Module):
         std = x.std(dim = -1, keepdim = True)
         return self.alpha * (x - mean) /( std + self.eps) + self.bias
   
+class FeedForwardBlock(nn.Module):
+
+    def __init__(self, d_model: int, d_ff: int, dropout: float) -> None:
+        super().__init__()
+        self.linear_1 = nn.Linear(d_model, d_ff) # w1 and b1
+        self.dropout = nn.Dropout(dropout)
+        self.linear_2 = nn.Linear(d_ff, d_model) # w2 and b2
+
+    def forward(self, x):
+        return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
+
+class Head(nn.Module):
+    def __init__(self, head_size: int, n_embd: int, block_size: int, dropout: float):
+        super().__init__()
+        self.key = nn.Linear(n_embd, head_size, bias=False)
+        self.query = nn.Linear(n_embd, head_size, bias=False)
+        self.value = nn.Linear(n_embd, head_size, bias=False)
+        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x):
+        B, T, C = x.shape
+        k = self.key(x)  
+        q = self.query(x)  
+        wei = q @ k.transpose(-2, -1) * C**-0.5  # (B, T, T)
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))  # Mask future positions
+        wei = F.softmax(wei, dim=-1)  
+        wei = self.dropout(wei)
+        v = self.value(x)  
+        out = wei @ v  
+        return out
