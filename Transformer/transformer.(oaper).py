@@ -55,7 +55,16 @@ class NormalizationLayer(nn.Module):
         mean= x.mean(dim = -1, keepdim = True)
         std = x.std(dim = -1, keepdim = True)
         return self.alpha * (x - mean) /( std + self.eps) + self.bias
-  
+
+class ResidualConnection(nn.module):
+    def __init__(self, features: int, dropout: float) -> None:
+            super().__init__()
+            self.dropout = nn.Dropout(dropout)
+            self.norm = NormalizationLayer(features)
+    
+    def forward(self, x, sublayer):
+            return x + self.dropout(sublayer(self.norm(x)))
+
 class FeedForwardBlock(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, dropout: float) -> None:
