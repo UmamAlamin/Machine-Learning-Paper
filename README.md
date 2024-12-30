@@ -13,4 +13,4 @@
 - [x] Adam [Link](https://arxiv.org/pdf/1412.6980.pdf)
 
 ## AutoEncoder 
-- [x] COnvloutional Variational Auto Encoder 
+- [x] Convloutional Variational Auto Encoder 
